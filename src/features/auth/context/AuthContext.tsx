@@ -32,9 +32,14 @@ const ROLE_KEY = "role";
 const EMPLOYEE_KEY = "employee";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(() => {
+    const stored = localStorage.getItem("employee");
+    return stored ? JSON.parse(stored) : null;
+  });
+  const [accessToken, setAccessToken] = useState<string | null>(() =>
+    localStorage.getItem("accessToken")
+  );
+  const [role, setRole] = useState<string | null>(() => localStorage.getItem("role"));
 
   useEffect(() => {
     const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -85,12 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        {
-          refreshToken: storedRefreshToken,
-        }
-      );
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+        refreshToken: storedRefreshToken,
+      });
 
       localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
       setAccessToken(data.accessToken);
