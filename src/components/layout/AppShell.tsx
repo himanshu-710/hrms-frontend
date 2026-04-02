@@ -24,17 +24,12 @@ export default function AppShell() {
           </div>
         )}
 
-        <Sidebar
-          mobileOpen={mobileOpen}
-          onCloseMobile={() => setMobileOpen(false)}
-          role={role}
-        />
+        {isMobile && (
+          <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} role={role} />
+        )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar
-            showMenuButton={isMobile}
-            onMenuClick={() => setMobileOpen(true)}
-          />
+          <Topbar showMenuButton={isMobile} onMenuClick={() => setMobileOpen(true)} />
 
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <Outlet />
