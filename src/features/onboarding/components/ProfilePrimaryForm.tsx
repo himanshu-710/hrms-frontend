@@ -110,9 +110,10 @@ export default function ProfilePrimaryForm() {
           error={errors.gender?.message}
           options={[
             { label: "Select gender", value: "" },
-            { label: "Male", value: "Male" },
-            { label: "Female", value: "Female" },
-            { label: "Other", value: "Other" },
+            { label: "Male", value: "MALE" },
+            { label: "Female", value: "FEMALE" },
+            { label: "Non Binary", value: "NON_BINARY" },
+            { label: "Prefer not to say", value: "PREFER_NOT_TO_SAY" },
           ]}
           {...register("gender")}
         />

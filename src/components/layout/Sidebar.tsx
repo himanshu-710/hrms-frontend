@@ -29,6 +29,7 @@ const navGroups: { title: string; items: NavItem[] }[] = [
       { label: "Onboarding Home", to: "/app/onboarding" },
       { label: "Documents", to: "/app/onboarding/documents" },
       { label: "Completion", to: "/app/onboarding/completion" },
+      { label: "Verification", to: "/app/onboarding/admin/documents", roles: ["HR"] },
       { label: "Admin Dashboard", to: "/app/onboarding/admin", roles: ["HR"] },
     ],
   },

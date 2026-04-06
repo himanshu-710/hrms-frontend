@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Input, toast } from "@/components/ui";
+import { Button, Input, Select, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
@@ -141,7 +141,15 @@ export default function AddressForm() {
           <Input label="State" {...register("current.state")} />
           <Input label="Pin Code" {...register("current.pin_code")} />
           <Input label="Country" {...register("current.country")} />
-          <Input label="Ownership Type" {...register("current.ownership_type")} />
+          <Select
+            label="Ownership Type"
+            options={[
+              { label: "Select ownership type", value: "" },
+              { label: "Owned", value: "OWNED" },
+              { label: "Rented", value: "RENTED" },
+            ]}
+            {...register("current.ownership_type")}
+          />
         </div>
       </div>
 
@@ -159,7 +167,15 @@ export default function AddressForm() {
           <Input label="State" {...register("permanent.state")} />
           <Input label="Pin Code" {...register("permanent.pin_code")} />
           <Input label="Country" {...register("permanent.country")} />
-          <Input label="Ownership Type" {...register("permanent.ownership_type")} />
+          <Select
+            label="Ownership Type"
+            options={[
+              { label: "Select ownership type", value: "" },
+              { label: "Owned", value: "OWNED" },
+              { label: "Rented", value: "RENTED" },
+            ]}
+            {...register("permanent.ownership_type")}
+          />
         </div>
       </div>
 

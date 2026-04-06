@@ -7,8 +7,10 @@ import AppHomePage from "@/features/app/pages/AppHomePage";
 import OnboardingLayout from "@/features/onboarding/components/OnboardingLayout";
 import OnboardingPage from "@/features/onboarding/pages/OnboardingPage";
 import OnboardingAddressPage from "@/features/onboarding/pages/OnboardingAddressPage";
+import OnboardingAdminDashboardPage from "@/features/onboarding/pages/OnboardingAdminDashboardPage";
 import OnboardingAssetsPage from "@/features/onboarding/pages/OnboardingAssetsPage";
 import OnboardingCompletionPage from "@/features/onboarding/pages/OnboardingCompletionPage";
+import OnboardingDocumentVerificationPage from "@/features/onboarding/pages/OnboardingDocumentVerificationPage";
 import OnboardingDocumentsPage from "@/features/onboarding/pages/OnboardingDocumentsPage";
 import OnboardingEducationPage from "@/features/onboarding/pages/OnboardingEducationPage";
 import OnboardingExperiencePage from "@/features/onboarding/pages/OnboardingExperiencePage";
@@ -65,6 +67,14 @@ const router = createBrowserRouter([
               {
                 path: "documents",
                 element: <OnboardingDocumentsPage />,
+              },
+              {
+                path: "admin/documents",
+                element: <OnboardingDocumentVerificationPage />,
+              },
+              {
+                path: "admin",
+                element: <OnboardingAdminDashboardPage />,
               },
               {
                 path: "assets",

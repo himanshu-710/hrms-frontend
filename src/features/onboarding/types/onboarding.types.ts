@@ -63,6 +63,32 @@ export interface DocumentItem {
   verification_status: string;
   uploaded_at: string;
 }
+
+export interface VerifyDocumentPayload {
+  status: "VERIFIED" | "REJECTED";
+  note?: string;
+}
+
+export interface EmployeeAssetItem {
+  id: number;
+  employee_id: number;
+  asset_code?: string;
+  asset_type: string;
+  asset_name: string;
+  serial_no?: string;
+  assigned_on: string;
+  acknowledgement_status: string;
+}
+
+export interface AdminDashboardRow {
+  employee_id: number;
+  name: string;
+  department?: string;
+  date_of_joining?: string | null;
+  days_since_joining: number;
+  completion_pct: number;
+  incomplete_sections: string[];
+}
 export interface ProfileIdentityItem {
   id?: number;
   employee_id?: number;
@@ -89,7 +115,7 @@ export interface ProfileResponse {
   experience: unknown[];
   addresses: ProfileAddressItem[];
   documents: DocumentItem[];
-  assets: unknown[];
+  assets: EmployeeAssetItem[];
   identity: ProfileIdentityItem[];
   relations: Record<string, unknown>;
 }

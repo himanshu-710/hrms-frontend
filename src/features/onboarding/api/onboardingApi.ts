@@ -1,10 +1,12 @@
 import api from "@/lib/api";
 import type {
+  AdminDashboardRow,
   AddressPayload,
   CompletionResponse,
   ContactPayload,
   DocumentItem,
   EducationPayload,
+  EmployeeAssetItem,
   ExperiencePayload,
   IdentityPayload,
   PrimaryDetailsPayload,
@@ -12,6 +14,7 @@ import type {
   ExperienceItem,
   ProfileResponse,
   RelationsPayload,
+  VerifyDocumentPayload,
 } from "@/features/onboarding/types/onboarding.types";
 
 export const onboardingApi = {
@@ -148,6 +151,33 @@ export const onboardingApi = {
 
   deleteDocument: async (documentId: number) => {
     const { data } = await api.delete(`/onboarding/documents/${documentId}`);
+    return data;
+  },
+
+  verifyDocument: async (documentId: number, payload: VerifyDocumentPayload) => {
+    const { data } = await api.patch(`/onboarding/documents/${documentId}/verify`, payload);
+    return data;
+  },
+
+  getAssets: async (employeeId: number) => {
+    const { data } = await api.get<EmployeeAssetItem[]>(
+      `/onboarding/profile/${employeeId}/assets`
+    );
+    return data;
+  },
+
+  acknowledgeAsset: async (assignmentId: number) => {
+    const { data } = await api.patch(`/onboarding/assets/${assignmentId}/acknowledge`);
+    return data;
+  },
+
+  getAdminDashboard: async () => {
+    const { data } = await api.get<AdminDashboardRow[]>(`/onboarding/admin/dashboard`);
+    return data;
+  },
+
+  sendReminder: async (employeeId: number) => {
+    const { data } = await api.post(`/onboarding/admin/remind/${employeeId}`);
     return data;
   },
 };
