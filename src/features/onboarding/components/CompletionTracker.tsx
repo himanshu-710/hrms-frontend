@@ -1,28 +1,31 @@
+import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui";
-
-type CompletionTrackerProps = {
-  sections: Record<string, boolean>;
-  percentage: number;
-  loading?: boolean;
-};
+import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 const defaultSections = [
-  "primary",
+  "profile",
+  "contact",
   "education",
   "experience",
-  "address",
-  "identity",
+  "addresses",
   "documents",
+  "identity",
   "assets",
-  "completion",
+  "relations",
 ];
 
-export default function CompletionTracker({
-  sections,
-  percentage,
-  loading = false,
-}: CompletionTrackerProps) {
-  if (loading) {
+export default function CompletionTracker() {
+  const { employee } = useAuth();
+  const employeeId = employee?.id;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["onboarding-completion", employeeId],
+    queryFn: () => onboardingApi.getCompletion(employeeId as number),
+    enabled: !!employeeId,
+  });
+
+  if (isLoading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="flex items-center gap-2">
@@ -38,6 +41,9 @@ export default function CompletionTracker({
       </div>
     );
   }
+
+  const sections = data?.sections ?? {};
+  const percentage = data?.percentage ?? 0;
 
   const incompleteSections = Object.entries(sections)
     .filter(([, value]) => !value)
@@ -64,7 +70,7 @@ export default function CompletionTracker({
               }`}
             >
               <span className="capitalize">{section}</span>
-              <span>{completed ? "✔" : "—"}</span>
+              <span>{completed ? "OK" : "-"}</span>
             </div>
           );
         })}

@@ -1,10 +1,17 @@
 import api from "@/lib/api";
 import type {
+  AddressPayload,
   CompletionResponse,
   ContactPayload,
   DocumentItem,
+  EducationPayload,
+  ExperiencePayload,
+  IdentityPayload,
   PrimaryDetailsPayload,
+  EducationItem,
+  ExperienceItem,
   ProfileResponse,
+  RelationsPayload,
 } from "@/features/onboarding/types/onboarding.types";
 
 export const onboardingApi = {
@@ -29,6 +36,77 @@ export const onboardingApi = {
       `/onboarding/profile/${employeeId}/contact`,
       payload
     );
+    return data;
+  },
+
+  saveIdentity: async (employeeId: number, payload: IdentityPayload) => {
+    const { data } = await api.put(
+      `/onboarding/profile/${employeeId}/identity`,
+      payload
+    );
+    return data;
+  },
+
+  getIdentity: async (employeeId: number) => {
+    const { data } = await api.get(`/onboarding/profile/${employeeId}/identity`);
+    return data;
+  },
+
+  saveAddresses: async (employeeId: number, payload: AddressPayload) => {
+    const { data } = await api.put(
+      `/onboarding/profile/${employeeId}/addresses`,
+      payload
+    );
+    return data;
+  },
+
+  saveRelations: async (employeeId: number, payload: RelationsPayload) => {
+    const { data } = await api.put(
+      `/onboarding/profile/${employeeId}/relations`,
+      payload
+    );
+    return data;
+  },
+
+  getEducation: async (employeeId: number) => {
+  const { data } = await api.get<EducationItem[]>(`/onboarding/education/${employeeId}`);
+  return data;
+},
+
+
+  addEducation: async (payload: EducationPayload) => {
+    const { data } = await api.post(`/onboarding/education`, payload);
+    return data;
+  },
+
+  updateEducation: async (id: number, payload: EducationPayload) => {
+    const { data } = await api.put(`/onboarding/education/${id}`, payload);
+    return data;
+  },
+
+  deleteEducation: async (id: number) => {
+    const { data } = await api.delete(`/onboarding/education/${id}`);
+    return data;
+  },
+
+ getExperience: async (employeeId: number) => {
+  const { data } = await api.get<ExperienceItem[]>(`/onboarding/experience/${employeeId}`);
+  return data;
+},
+
+
+  addExperience: async (payload: ExperiencePayload) => {
+    const { data } = await api.post(`/onboarding/experience`, payload);
+    return data;
+  },
+
+  updateExperience: async (id: number, payload: ExperiencePayload) => {
+    const { data } = await api.put(`/onboarding/experience/${id}`, payload);
+    return data;
+  },
+
+  deleteExperience: async (id: number) => {
+    const { data } = await api.delete(`/onboarding/experience/${id}`);
     return data;
   },
 

@@ -27,7 +27,8 @@ export interface IdentityPayload {
   extra_info?: Record<string, unknown>;
 }
 
-export interface AddressItem {
+export interface ProfileAddressItem {
+  address_type?: "CURRENT" | "PERMANENT";
   line1: string;
   line2?: string;
   city: string;
@@ -39,10 +40,11 @@ export interface AddressItem {
 
 export interface AddressPayload {
   employee_id?: number;
-  current: AddressItem;
-  permanent: AddressItem;
+  current: ProfileAddressItem;
+  permanent: ProfileAddressItem;
   copy_from_current: boolean;
 }
+
 
 export interface CompletionResponse {
   sections: Record<string, boolean>;
@@ -55,10 +57,20 @@ export interface DocumentItem {
   doc_category: string;
   file_name: string;
   s3_url: string;
+  presigned_url?: string;
   file_size_kb: number;
   mime_type: string;
   verification_status: string;
   uploaded_at: string;
+}
+export interface ProfileIdentityItem {
+  id?: number;
+  employee_id?: number;
+  doc_type: "AADHAAR" | "PAN" | "PASSPORT";
+  doc_number: string;
+  name_on_doc?: string;
+  issue_date?: string;
+  expiry_date?: string;
 }
 
 export interface ProfileResponse {
@@ -75,9 +87,80 @@ export interface ProfileResponse {
   };
   education: unknown[];
   experience: unknown[];
-  addresses: unknown[];
+  addresses: ProfileAddressItem[];
   documents: DocumentItem[];
   assets: unknown[];
-  identity: unknown[];
+  identity: ProfileIdentityItem[];
   relations: Record<string, unknown>;
+}
+
+export interface ParentRelation {
+  name: string;
+  dob: string;
+  occupation: string;
+  contact: string;
+}
+
+export interface SpouseRelation {
+  name: string;
+  dob: string;
+  contact: string;
+}
+
+export interface ChildRelation {
+  name: string;
+  dob: string;
+}
+
+export interface RelationsPayload {
+  mother: ParentRelation;
+  father: ParentRelation;
+  spouse: SpouseRelation;
+  children: ChildRelation[];
+}
+
+export interface EducationItem {
+  id: number;
+  employee_id: number;
+  degree: string;
+  branch: string;
+  university: string;
+  cgpa_or_pct: number;
+  year_of_joining: number;
+  year_of_completion: number;
+  certificate_url?: string;
+}
+
+export interface EducationPayload {
+  employee_id: number;
+  degree: string;
+  branch: string;
+  university: string;
+  cgpa_or_pct: number;
+  year_of_joining: number;
+  year_of_completion: number;
+}
+export interface ExperienceItem {
+  id: number;
+  employee_id: number;
+  company_name: string;
+  designation: string;
+  employment_type: string;
+  start_date: string;
+  end_date?: string | null;
+  is_current: boolean;
+  industry: string;
+  description: string;
+}
+
+export interface ExperiencePayload {
+  employee_id: number;
+  company_name: string;
+  designation: string;
+  employment_type: string;
+  start_date: string;
+  end_date?: string | null;
+  is_current: boolean;
+  industry: string;
+  description: string;
 }

@@ -13,7 +13,7 @@ export interface AuthState {
 }
 
 export interface LoginPayload {
-  email: string;
+  work_email: string;
   password: string;
 }
 
@@ -24,12 +24,11 @@ export interface RegisterPayload {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  role: string;
-  employee: Employee;
+  access_token: string;
+  refresh_token: string;
 }
 
-export interface RegisterResponse {
-  message: string;
+export interface RefreshResponse {
+  access_token: string;
+  refresh_token: string;
 }

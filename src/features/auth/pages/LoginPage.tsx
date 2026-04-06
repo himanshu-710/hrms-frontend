@@ -6,7 +6,7 @@ import { Input, Button, toast } from "@/components/ui";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
 const loginSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  work_email: z.string().min(1, "Email is required").email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -23,7 +23,7 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      work_email: "",
       password: "",
     },
   });
@@ -49,11 +49,11 @@ export default function LoginPage() {
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            label="Email"
+            label="Work Email"
             type="email"
-            placeholder="Enter your email"
-            error={errors.email?.message}
-            {...register("email")}
+            placeholder="Enter your work email"
+            error={errors.work_email?.message}
+            {...register("work_email")}
           />
 
           <Input

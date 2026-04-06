@@ -1,35 +1,24 @@
+import { useAuth } from "@/features/auth/context/AuthContext";
 import ProfilePrimaryForm from "@/features/onboarding/components/ProfilePrimaryForm";
 import ContactForm from "@/features/onboarding/components/ContactForm";
-import IdentityForm from "@/features/onboarding/components/IdentityForm";
-import AddressForm from "@/features/onboarding/components/AddressForm";
-import CompletionTracker from "@/features/onboarding/components/CompletionTracker";
-import DocumentUploadCard from "@/features/onboarding/components/DocumentUploadCard";
 
 export default function OnboardingPage() {
+  const { employee } = useAuth();
+
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-xl font-semibold text-slate-900">
+          Welcome, {employee?.first_name ?? "Employee"}
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Start with your primary and contact details, then use the onboarding steps on the left
+          to complete the remaining sections.
+        </p>
+      </div>
+
       <ProfilePrimaryForm />
       <ContactForm />
-      <IdentityForm />
-      <AddressForm />
-      <CompletionTracker
-        sections={{
-          primary: true,
-          education: false,
-          experience: false,
-          address: true,
-          identity: false,
-          documents: false,
-          assets: false,
-          completion: false,
-        }}
-        percentage={25}
-      />
-      <DocumentUploadCard
-        onUpload={async (file, docCategory) => {
-          console.log(file, docCategory);
-        }}
-      />
     </div>
   );
 }

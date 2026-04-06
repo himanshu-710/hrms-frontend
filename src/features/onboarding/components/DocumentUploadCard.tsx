@@ -1,11 +1,18 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Select } from "@/components/ui";
 
 type DocumentUploadCardProps = {
-  onUpload: (file: File, docCategory: string) => Promise<void>;
+  selectedCategory?: string;
+  onUpload: (
+    file: File,
+    docCategory: string,
+    onProgress: (progress: number) => void
+  ) => Promise<void>;
 };
 
+
 export default function DocumentUploadCard({
+  selectedCategory,
   onUpload,
 }: DocumentUploadCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -14,6 +21,12 @@ export default function DocumentUploadCard({
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setDocCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
 
   const validateFile = (selectedFile: File) => {
     const maxSize = 5 * 1024 * 1024;
@@ -26,7 +39,7 @@ export default function DocumentUploadCard({
     setFile(selectedFile);
   };
 
-  const handleUpload = async () => {
+    const handleUpload = async () => {
     if (!file) {
       setError("Please select a file");
       return;
@@ -40,8 +53,12 @@ export default function DocumentUploadCard({
     try {
       setIsUploading(true);
       setError("");
-      setProgress(30);
-      await onUpload(file, docCategory);
+      setProgress(0);
+
+      await onUpload(file, docCategory, (value) => {
+        setProgress(value);
+      });
+
       setProgress(100);
       setFile(null);
       setDocCategory("");
@@ -52,6 +69,7 @@ export default function DocumentUploadCard({
       setIsUploading(false);
     }
   };
+
 
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">

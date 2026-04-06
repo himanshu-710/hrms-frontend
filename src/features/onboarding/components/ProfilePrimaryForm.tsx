@@ -1,7 +1,11 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Select } from "@/components/ui";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Input, Select, toast } from "@/components/ui";
+import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 const primarySchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -14,10 +18,21 @@ const primarySchema = z.object({
 type PrimaryFormValues = z.infer<typeof primarySchema>;
 
 export default function ProfilePrimaryForm() {
+  const { employee } = useAuth();
+  const employeeId = employee?.id;
+  const queryClient = useQueryClient();
+
+  const { data: profile } = useQuery({
+    queryKey: ["onboarding-profile", employeeId],
+    queryFn: () => onboardingApi.getProfile(employeeId as number),
+    enabled: !!employeeId,
+  });
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    reset,
+    formState: { errors },
   } = useForm<PrimaryFormValues>({
     resolver: zodResolver(primarySchema),
     defaultValues: {
@@ -29,8 +44,38 @@ export default function ProfilePrimaryForm() {
     },
   });
 
+  useEffect(() => {
+    if (!profile?.employee) return;
+
+    reset({
+      first_name: profile.employee.first_name ?? "",
+      last_name: profile.employee.last_name ?? "",
+      dob: profile.employee.dob ?? "",
+      gender: profile.employee.gender ?? "",
+      blood_group: profile.employee.blood_group ?? "",
+    });
+  }, [profile, reset]);
+
+  const mutation = useMutation({
+    mutationFn: (values: PrimaryFormValues) =>
+      onboardingApi.updatePrimaryDetails(employeeId as number, values),
+    onSuccess: () => {
+      toast.success("Primary details updated");
+      queryClient.invalidateQueries({ queryKey: ["onboarding-profile", employeeId] });
+      queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
+    },
+    onError: () => {
+      toast.error("Failed to update primary details");
+    },
+  });
+
   const onSubmit = async (values: PrimaryFormValues) => {
-    console.log("Primary form values:", values);
+    if (!employeeId) {
+      toast.error("Employee id not found");
+      return;
+    }
+
+    mutation.mutate(values);
   };
 
   return (
@@ -90,7 +135,7 @@ export default function ProfilePrimaryForm() {
         />
 
         <div className="md:col-span-2">
-          <Button type="submit" isLoading={isSubmitting}>
+          <Button type="submit" isLoading={mutation.isPending}>
             Save Primary Details
           </Button>
         </div>
