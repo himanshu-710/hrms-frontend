@@ -19,7 +19,7 @@ export default function AppShell() {
     <div className="h-screen bg-slate-50">
       <div className="flex h-full">
         {!isMobile && (
-          <div className={sidebarCollapsed ? "w-20" : "w-[240px]"}>
+          <div className={sidebarCollapsed ? "w-20" : "w-60"}>
             <Sidebar collapsed={sidebarCollapsed} role={role} />
           </div>
         )}

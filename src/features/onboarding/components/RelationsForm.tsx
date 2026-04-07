@@ -54,14 +54,15 @@ export default function RelationsForm() {
     enabled: !!employeeId,
   });
 
-  const { register, control, handleSubmit, reset } = useForm<RelationsFormValues>({
-    defaultValues: {
-      mother: emptyParent,
-      father: emptyParent,
-      spouse: emptySpouse,
-      children: [],
-    },
-  });
+  const { register, control, handleSubmit, reset } =
+    useForm<RelationsFormValues>({
+      defaultValues: {
+        mother: emptyParent,
+        father: emptyParent,
+        spouse: emptySpouse,
+        children: [],
+      },
+    });
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -69,23 +70,41 @@ export default function RelationsForm() {
   });
 
   useEffect(() => {
-    const relations = profile?.relations as Partial<RelationsFormValues> | undefined;
+    const relations = profile?.relations as
+      | Partial<RelationsFormValues>
+      | undefined;
 
     reset({
       mother: relations?.mother ?? emptyParent,
       father: relations?.father ?? emptyParent,
       spouse: relations?.spouse ?? emptySpouse,
-      children: Array.isArray(relations?.children) ? relations.children : [],
+      children: Array.isArray(relations?.children)
+        ? relations.children
+        : [],
     });
   }, [profile, reset]);
 
   const mutation = useMutation({
-    mutationFn: (values: RelationsFormValues) =>
-      onboardingApi.saveRelations(employeeId as number, values),
+    mutationFn: (values: RelationsFormValues) => {
+      if (!employeeId) throw new Error("Employee id missing");
+
+      return onboardingApi.updateRelations(employeeId, {
+        mother: values.mother,
+        father: values.father,
+        spouse: values.spouse,
+        children: values.children,
+      });
+    },
     onSuccess: () => {
       toast.success("Relations updated");
-      queryClient.invalidateQueries({ queryKey: ["onboarding-profile", employeeId] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-profile", employeeId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-completion", employeeId],
+      });
     },
     onError: () => {
       toast.error("Failed to update relations");
@@ -104,7 +123,9 @@ export default function RelationsForm() {
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">Family Relations</h3>
+        <h3 className="text-lg font-semibold text-slate-900">
+          Family Relations
+        </h3>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -136,7 +157,9 @@ export default function RelationsForm() {
         </div>
 
         {fields.length === 0 ? (
-          <p className="text-sm text-slate-500">No children added</p>
+          <p className="text-sm text-slate-500">
+            No children added
+          </p>
         ) : (
           <div className="space-y-4">
             {fields.map((field, index) => (
@@ -144,11 +167,23 @@ export default function RelationsForm() {
                 key={field.id}
                 className="grid gap-4 rounded-xl border border-slate-200 p-4 md:grid-cols-2"
               >
-                <Input label="Child Name" {...register(`children.${index}.name`)} />
-                <Input label="Child DOB" type="date" {...register(`children.${index}.dob`)} />
+                <Input
+                  label="Child Name"
+                  {...register(`children.${index}.name`)}
+                />
+
+                <Input
+                  label="Child DOB"
+                  type="date"
+                  {...register(`children.${index}.dob`)}
+                />
 
                 <div className="md:col-span-2">
-                  <Button type="button" variant="secondary" onClick={() => remove(index)}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => remove(index)}
+                  >
                     Remove Child
                   </Button>
                 </div>

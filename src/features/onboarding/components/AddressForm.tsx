@@ -5,29 +5,23 @@ import { Button, Input, Select, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
 import { useAuth } from "@/features/auth/context/useAuth";
 
+type Address = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pin_code: string;
+  country: string;
+  ownership_type: string;
+};
+
 type AddressValues = {
-  current: {
-    line1: string;
-    line2: string;
-    city: string;
-    state: string;
-    pin_code: string;
-    country: string;
-    ownership_type: string;
-  };
-  permanent: {
-    line1: string;
-    line2: string;
-    city: string;
-    state: string;
-    pin_code: string;
-    country: string;
-    ownership_type: string;
-  };
+  current: Address;
+  permanent: Address;
   sameAsCurrent: boolean;
 };
 
-const emptyAddress = {
+const emptyAddress: Address = {
   line1: "",
   line2: "",
   city: "",
@@ -48,78 +42,105 @@ export default function AddressForm() {
     enabled: !!employeeId,
   });
 
-  const { register, handleSubmit, control, setValue, reset } = useForm<AddressValues>({
-    defaultValues: {
-      current: emptyAddress,
-      permanent: emptyAddress,
-      sameAsCurrent: false,
-    },
-  });
+  const { register, handleSubmit, control, setValue, reset } =
+    useForm<AddressValues>({
+      defaultValues: {
+        current: emptyAddress,
+        permanent: emptyAddress,
+        sameAsCurrent: false,
+      },
+    });
 
-    useEffect(() => {
+  useEffect(() => {
     const addresses = profile?.addresses ?? [];
 
     const currentAddress =
-      addresses.find((item) => item.address_type === "CURRENT") ?? emptyAddress;
+      addresses.find((a: any) => a.address_type === "CURRENT") ??
+      emptyAddress;
 
     const permanentAddress =
-      addresses.find((item) => item.address_type === "PERMANENT") ?? emptyAddress;
+      addresses.find((a: any) => a.address_type === "PERMANENT") ??
+      emptyAddress;
 
     reset({
       current: {
-        line1: currentAddress.line1 || "",
-        line2: currentAddress.line2 || "",
-        city: currentAddress.city || "",
-        state: currentAddress.state || "",
-        pin_code: currentAddress.pin_code || "",
-        country: currentAddress.country || "",
-        ownership_type: currentAddress.ownership_type || "",
+        line1: currentAddress.line1 ?? "",
+        line2: currentAddress.line2 ?? "",
+        city: currentAddress.city ?? "",
+        state: currentAddress.state ?? "",
+        pin_code: currentAddress.pin_code ?? "",
+        country: currentAddress.country ?? "",
+        ownership_type: currentAddress.ownership_type ?? "",
       },
       permanent: {
-        line1: permanentAddress.line1 || "",
-        line2: permanentAddress.line2 || "",
-        city: permanentAddress.city || "",
-        state: permanentAddress.state || "",
-        pin_code: permanentAddress.pin_code || "",
-        country: permanentAddress.country || "",
-        ownership_type: permanentAddress.ownership_type || "",
+        line1: permanentAddress.line1 ?? "",
+        line2: permanentAddress.line2 ?? "",
+        city: permanentAddress.city ?? "",
+        state: permanentAddress.state ?? "",
+        pin_code: permanentAddress.pin_code ?? "",
+        country: permanentAddress.country ?? "",
+        ownership_type: permanentAddress.ownership_type ?? "",
       },
       sameAsCurrent: false,
     });
   }, [profile, reset]);
 
+  const sameAsCurrent = useWatch({
+    control,
+    name: "sameAsCurrent",
+  });
 
-  const sameAsCurrent = useWatch({ control, name: "sameAsCurrent" });
-  const current = useWatch({ control, name: "current" });
+  const current = useWatch({
+    control,
+    name: "current",
+  });
 
   useEffect(() => {
     if (!sameAsCurrent) return;
-
-    setValue("permanent.line1", current.line1);
-    setValue("permanent.line2", current.line2);
-    setValue("permanent.city", current.city);
-    setValue("permanent.state", current.state);
-    setValue("permanent.pin_code", current.pin_code);
-    setValue("permanent.country", current.country);
-    setValue("permanent.ownership_type", current.ownership_type);
+    setValue("permanent", current);
   }, [sameAsCurrent, current, setValue]);
 
   const mutation = useMutation({
-    mutationFn: (values: AddressValues) =>
-      onboardingApi.saveAddresses(employeeId as number, {
-        current: values.current,
-        permanent: values.permanent,
-        copy_from_current: values.sameAsCurrent,
-      }),
-    onSuccess: () => {
-      toast.success("Address details updated");
-      queryClient.invalidateQueries({ queryKey: ["onboarding-profile", employeeId] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
-    },
-    onError: () => {
-      toast.error("Failed to update address details");
-    },
-  });
+  mutationFn: (values: AddressValues) => {
+    if (!employeeId) throw new Error("Employee id missing");
+
+    const payload = {
+      current: {
+        address_type: "CURRENT",
+        line1: values.current.line1,
+        line2: values.current.line2,
+        city: values.current.city,
+        state: values.current.state,
+        pin_code: values.current.pin_code,
+        country: values.current.country,
+        ownership_type: values.current.ownership_type,
+      },
+      permanent: {
+        address_type: "PERMANENT",
+        line1: values.permanent.line1,
+        line2: values.permanent.line2,
+        city: values.permanent.city,
+        state: values.permanent.state,
+        pin_code: values.permanent.pin_code,
+        country: values.permanent.country,
+        ownership_type: values.permanent.ownership_type,
+      },
+    };
+
+    return onboardingApi.updateAddress(employeeId, payload);
+  },
+
+  onSuccess: () => {
+    toast.success("Address updated");
+    queryClient.invalidateQueries({
+      queryKey: ["onboarding-profile", employeeId],
+    });
+  },
+
+  onError: () => {
+    toast.error("Failed to update address");
+  },
+});
 
   const onSubmit = (values: AddressValues) => {
     if (!employeeId) {
@@ -133,14 +154,18 @@ export default function AddressForm() {
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <h3 className="mb-3 text-lg font-semibold">Current Address</h3>
+        <h3 className="mb-3 text-lg font-semibold">
+          Current Address
+        </h3>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="Line 1" {...register("current.line1")} />
           <Input label="Line 2" {...register("current.line2")} />
           <Input label="City" {...register("current.city")} />
           <Input label="State" {...register("current.state")} />
-          <Input label="Pin Code" {...register("current.pin_code")} />
-          <Input label="Country" {...register("current.country")} />
+          <Input label="Pin Code" {...register("current.pin_code", { required: true })} />
+          <Input label="Country" {...register("current.country", { required: true })} />
+
           <Select
             label="Ownership Type"
             options={[
@@ -159,7 +184,10 @@ export default function AddressForm() {
       </label>
 
       <div>
-        <h3 className="mb-3 text-lg font-semibold">Permanent Address</h3>
+        <h3 className="mb-3 text-lg font-semibold">
+          Permanent Address
+        </h3>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Input label="Line 1" {...register("permanent.line1")} />
           <Input label="Line 2" {...register("permanent.line2")} />
@@ -167,6 +195,7 @@ export default function AddressForm() {
           <Input label="State" {...register("permanent.state")} />
           <Input label="Pin Code" {...register("permanent.pin_code")} />
           <Input label="Country" {...register("permanent.country")} />
+
           <Select
             label="Ownership Type"
             options={[
