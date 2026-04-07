@@ -1,55 +1,49 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
 });
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+// Attach token to every request
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
+// Auto refresh on 401
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
+  async (error) => {
+    const originalRequest = error.config;
 
-    if (!originalRequest) {
-      return Promise.reject(error);
-    }
-
-    const url = originalRequest.url ?? "";
-    const isAuthRoute =
-      url.includes("/auth/login") ||
-      url.includes("/auth/register") ||
-      url.includes("/auth/refresh");
-
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/v1/auth/refresh`,
+          { refresh_token: refreshToken }
+        );
 
-        const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
+        localStorage.setItem("accessToken", data.access_token);
+        localStorage.setItem("refreshToken", data.refresh_token);
 
-        const newAccessToken = res.data.access_token;
-
-        localStorage.setItem("accessToken", newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
+        originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
         return api(originalRequest);
       } catch {
         localStorage.clear();
         window.location.href = "/login";
+        return Promise.reject(error);
       }
     }
 
