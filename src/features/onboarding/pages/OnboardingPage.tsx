@@ -9,7 +9,7 @@ export default function OnboardingPage() {
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="text-xl font-semibold text-slate-900">
-          Welcome, {employee?.first_name ?? "Employee"}
+          Welcome, {employee?.work_email ?? "Employee"}
         </h2>
         <p className="mt-2 text-sm text-slate-600">
           Start with your primary and contact details, then use the onboarding steps on the left
