@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { Button, Input } from "@/components/ui";
 import type {
   ExperienceItem,
@@ -21,7 +21,7 @@ export default function ExperienceEntryForm({
   onSubmit,
   onCancel,
 }: ExperienceEntryFormProps) {
-  const { register, handleSubmit, watch, reset } = useForm<ExperiencePayload>({
+  const { register, handleSubmit, control, reset } = useForm<ExperiencePayload>({
     defaultValues: {
       employee_id: employeeId,
       company_name: "",
@@ -35,7 +35,7 @@ export default function ExperienceEntryForm({
     },
   });
 
-  const isCurrent = watch("is_current");
+  const isCurrent = useWatch({ control, name: "is_current" });
 
   useEffect(() => {
     reset({

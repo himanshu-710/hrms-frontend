@@ -7,6 +7,7 @@ export * from "./Table";
 export * from "./Badge";
 export * from "./Spinner";
 export * from "./Toast";
+export * from "./toastApi";
 export * from "./Pagination";
 export * from "./DatePicker";
 export * from "./FileUpload";

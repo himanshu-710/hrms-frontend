@@ -1,4 +1,11 @@
 import axios from "axios";
+import {
+  clearAuthSession,
+  getAccessToken,
+  getRefreshToken,
+  redirectToLogin,
+  refreshStoredSession,
+} from "@/features/auth/lib/authStorage";
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
@@ -6,7 +13,7 @@ const api = axios.create({
 
 // Attach token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -22,27 +29,26 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
-        localStorage.clear();
-        window.location.href = "/login";
+      if (!getRefreshToken()) {
+        clearAuthSession();
+        redirectToLogin();
         return Promise.reject(error);
       }
 
       try {
-        const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/v1/auth/refresh`,
-          { refresh_token: refreshToken }
-        );
+        const session = await refreshStoredSession();
 
-        localStorage.setItem("accessToken", data.access_token);
-        localStorage.setItem("refreshToken", data.refresh_token);
+        if (!session) {
+          clearAuthSession();
+          redirectToLogin();
+          return Promise.reject(error);
+        }
 
-        originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+        originalRequest.headers.Authorization = `Bearer ${session.accessToken}`;
         return api(originalRequest);
       } catch {
-        localStorage.clear();
-        window.location.href = "/login";
+        clearAuthSession();
+        redirectToLogin();
         return Promise.reject(error);
       }
     }

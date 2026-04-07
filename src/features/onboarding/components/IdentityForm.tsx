@@ -3,7 +3,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Input, Select, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 type IdentityFormValues = {
   doc_type: "AADHAAR" | "PAN" | "PASSPORT" | "";

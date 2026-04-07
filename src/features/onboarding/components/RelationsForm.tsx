@@ -3,7 +3,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Input, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 type ParentRelation = {
   name: string;

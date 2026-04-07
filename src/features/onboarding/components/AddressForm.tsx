@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Input, Select, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 type AddressValues = {
   current: {
@@ -48,7 +48,7 @@ export default function AddressForm() {
     enabled: !!employeeId,
   });
 
-  const { register, handleSubmit, watch, setValue, reset } = useForm<AddressValues>({
+  const { register, handleSubmit, control, setValue, reset } = useForm<AddressValues>({
     defaultValues: {
       current: emptyAddress,
       permanent: emptyAddress,
@@ -89,8 +89,8 @@ export default function AddressForm() {
   }, [profile, reset]);
 
 
-  const sameAsCurrent = watch("sameAsCurrent");
-  const current = watch("current");
+  const sameAsCurrent = useWatch({ control, name: "sameAsCurrent" });
+  const current = useWatch({ control, name: "current" });
 
   useEffect(() => {
     if (!sameAsCurrent) return;
