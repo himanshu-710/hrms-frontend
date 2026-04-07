@@ -3,7 +3,7 @@ import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 export default function AppShell() {
   const { role } = useAuth();

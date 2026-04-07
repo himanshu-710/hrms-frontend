@@ -4,7 +4,7 @@ import { toast } from "@/components/ui";
 import DocumentListTable from "@/features/onboarding/components/DocumentListTable";
 import DocumentUploadCard from "@/features/onboarding/components/DocumentUploadCard";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 export default function OnboardingDocumentsPage() {
   const { employee } = useAuth();

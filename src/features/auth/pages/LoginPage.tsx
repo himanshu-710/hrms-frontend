@@ -3,7 +3,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link } from "react-router-dom";
 import { Input, Button, toast } from "@/components/ui";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 const loginSchema = z.object({
   work_email: z.string().min(1, "Email is required").email("Invalid email format"),

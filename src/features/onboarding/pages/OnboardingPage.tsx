@@ -1,4 +1,4 @@
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 import ProfilePrimaryForm from "@/features/onboarding/components/ProfilePrimaryForm";
 import ContactForm from "@/features/onboarding/components/ContactForm";
 

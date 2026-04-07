@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 const defaultSections = [
   "profile",
