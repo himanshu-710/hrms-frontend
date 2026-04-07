@@ -4,7 +4,6 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-// 🔹 Request Interceptor → attach access token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem("accessToken");
 
@@ -15,37 +14,40 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// 🔹 Response Interceptor → handle 401
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest: any = error.config;
+    const originalRequest = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
 
-    // if 401 and not retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    const url = originalRequest.url ?? "";
+    const isAuthRoute =
+      url.includes("/auth/login") ||
+      url.includes("/auth/register") ||
+      url.includes("/auth/refresh");
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
 
-        // call refresh API
-        const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
-          {
-            refreshToken,
-          }
-        );
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
 
-        const newAccessToken = res.data.accessToken;
+        const newAccessToken = res.data.access_token;
 
         localStorage.setItem("accessToken", newAccessToken);
-
-        // retry original request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
-      } catch (err) {
-        // refresh failed → logout
+      } catch {
         localStorage.clear();
         window.location.href = "/login";
       }

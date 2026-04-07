@@ -1,18 +1,19 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import axios from "axios";
 import api from "@/lib/api";
+import { decodeJwt } from "@/lib/auth";
 import type {
   AuthState,
   Employee,
   LoginPayload,
   LoginResponse,
+  RefreshResponse,
   RegisterPayload,
 } from "@/features/auth/types/auth.types";
 
@@ -31,32 +32,43 @@ const REFRESH_TOKEN_KEY = "refreshToken";
 const ROLE_KEY = "role";
 const EMPLOYEE_KEY = "employee";
 
+function getStoredEmployee(): Employee | null {
+  const stored = localStorage.getItem(EMPLOYEE_KEY);
+  return stored ? JSON.parse(stored) : null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-    const storedRole = localStorage.getItem(ROLE_KEY);
-    const storedEmployee = localStorage.getItem(EMPLOYEE_KEY);
-
-    if (storedAccessToken) setAccessToken(storedAccessToken);
-    if (storedRole) setRole(storedRole);
-    if (storedEmployee) setEmployee(JSON.parse(storedEmployee));
-  }, []);
+  const [employee, setEmployee] = useState<Employee | null>(() => getStoredEmployee());
+  const [accessToken, setAccessToken] = useState<string | null>(() =>
+    localStorage.getItem(ACCESS_TOKEN_KEY)
+  );
+  const [role, setRole] = useState<string | null>(() =>
+    localStorage.getItem(ROLE_KEY)
+  );
 
   const login = async (payload: LoginPayload) => {
     const { data } = await api.post<LoginResponse>("/auth/login", payload);
 
-    localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
-    localStorage.setItem(ROLE_KEY, data.role);
-    localStorage.setItem(EMPLOYEE_KEY, JSON.stringify(data.employee));
+    const { access_token, refresh_token } = data;
+    const decoded = decodeJwt(access_token);
 
-    setAccessToken(data.accessToken);
-    setRole(data.role);
-    setEmployee(data.employee);
+    if (!decoded) {
+      throw new Error("Invalid access token");
+    }
+
+    const employeeData: Employee = {
+      id: decoded.employee_id,
+      work_email: payload.work_email,
+    };
+
+    localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+    localStorage.setItem(ROLE_KEY, decoded.role);
+    localStorage.setItem(EMPLOYEE_KEY, JSON.stringify(employeeData));
+
+    setAccessToken(access_token);
+    setRole(decoded.role);
+    setEmployee(employeeData);
   };
 
   const register = async (payload: RegisterPayload) => {
@@ -85,17 +97,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { data } = await axios.post(
+      const { data } = await axios.post<RefreshResponse>(
         `${import.meta.env.VITE_API_URL}/auth/refresh`,
         {
-          refreshToken: storedRefreshToken,
+          refresh_token: storedRefreshToken,
         }
       );
 
-      localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-      setAccessToken(data.accessToken);
+      const decoded = decodeJwt(data.access_token);
+      if (!decoded) {
+        logout();
+        return null;
+      }
 
-      return data.accessToken;
+      const existingEmployee = getStoredEmployee();
+      const employeeData: Employee = {
+        id: decoded.employee_id,
+        work_email: existingEmployee?.work_email,
+      };
+
+      localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+      localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+      localStorage.setItem(ROLE_KEY, decoded.role);
+      localStorage.setItem(EMPLOYEE_KEY, JSON.stringify(employeeData));
+
+      setAccessToken(data.access_token);
+      setRole(decoded.role);
+      setEmployee(employeeData);
+
+      return data.access_token;
     } catch {
       logout();
       return null;
