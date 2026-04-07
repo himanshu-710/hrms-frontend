@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 import ExperienceEntryForm from "@/features/onboarding/components/ExperienceEntryForm";
 import type {
   ExperienceItem,

@@ -2,7 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { onboardingSteps } from "@/features/onboarding/constants/onboardingSteps";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 const stepToPath: Record<string, string> = {
   "Primary Info": "/app/onboarding",

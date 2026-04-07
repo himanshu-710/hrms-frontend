@@ -1,4 +1,4 @@
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 export default function OnboardingDocumentVerificationPage() {
   const { role } = useAuth();

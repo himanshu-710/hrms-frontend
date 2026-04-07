@@ -1,74 +1,42 @@
 import {
-  createContext,
-  useContext,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
-import axios from "axios";
 import api from "@/lib/api";
-import { decodeJwt } from "@/lib/auth";
+import { AuthContext, type AuthContextType } from "@/features/auth/context/auth-state";
+import {
+  clearAuthSession,
+  createLoginSession,
+  getAccessToken,
+  getStoredEmployee,
+  getStoredRole,
+  persistAuthSession,
+  redirectToLogin,
+  refreshStoredSession,
+} from "@/features/auth/lib/authStorage";
 import type {
-  AuthState,
   Employee,
   LoginPayload,
-  LoginResponse,
-  RefreshResponse,
   RegisterPayload,
 } from "@/features/auth/types/auth.types";
 
-interface AuthContextType extends AuthState {
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => void;
-  refreshToken: () => Promise<string | null>;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
-const ROLE_KEY = "role";
-const EMPLOYEE_KEY = "employee";
-
-function getStoredEmployee(): Employee | null {
-  const stored = localStorage.getItem(EMPLOYEE_KEY);
-  return stored ? JSON.parse(stored) : null;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [employee, setEmployee] = useState<Employee | null>(() => getStoredEmployee());
-  const [accessToken, setAccessToken] = useState<string | null>(() =>
-    localStorage.getItem(ACCESS_TOKEN_KEY)
-  );
-  const [role, setRole] = useState<string | null>(() =>
-    localStorage.getItem(ROLE_KEY)
-  );
+  const [accessToken, setAccessToken] = useState<string | null>(() => getAccessToken());
+  const [role, setRole] = useState<string | null>(() => getStoredRole());
 
   const login = async (payload: LoginPayload) => {
-    const { data } = await api.post<LoginResponse>("/auth/login", payload);
+    const { data } = await api.post("/auth/login", payload);
+    const session = createLoginSession(data, payload.work_email);
 
-    const { access_token, refresh_token } = data;
-    const decoded = decodeJwt(access_token);
-
-    if (!decoded) {
+    if (!session) {
       throw new Error("Invalid access token");
     }
 
-    const employeeData: Employee = {
-      id: decoded.employee_id,
-      work_email: payload.work_email,
-    };
-
-    localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
-    localStorage.setItem(ROLE_KEY, decoded.role);
-    localStorage.setItem(EMPLOYEE_KEY, JSON.stringify(employeeData));
-
-    setAccessToken(access_token);
-    setRole(decoded.role);
-    setEmployee(employeeData);
+    persistAuthSession(session);
+    setAccessToken(session.accessToken);
+    setRole(session.role);
+    setEmployee(session.employee);
   };
 
   const register = async (payload: RegisterPayload) => {
@@ -76,85 +44,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(ROLE_KEY);
-    localStorage.removeItem(EMPLOYEE_KEY);
-
+    clearAuthSession();
     setAccessToken(null);
     setRole(null);
     setEmployee(null);
-
-    window.location.href = "/login";
+    redirectToLogin();
   };
 
   const refreshToken = async () => {
-    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-    if (!storedRefreshToken) {
-      logout();
-      return null;
-    }
-
     try {
-      const { data } = await axios.post<RefreshResponse>(
-        `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        {
-          refresh_token: storedRefreshToken,
-        }
-      );
+      const session = await refreshStoredSession();
 
-      const decoded = decodeJwt(data.access_token);
-      if (!decoded) {
+      if (!session) {
         logout();
         return null;
       }
 
-      const existingEmployee = getStoredEmployee();
-      const employeeData: Employee = {
-        id: decoded.employee_id,
-        work_email: existingEmployee?.work_email,
-      };
+      setAccessToken(session.accessToken);
+      setRole(session.role);
+      setEmployee(session.employee);
 
-      localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
-      localStorage.setItem(ROLE_KEY, decoded.role);
-      localStorage.setItem(EMPLOYEE_KEY, JSON.stringify(employeeData));
-
-      setAccessToken(data.access_token);
-      setRole(decoded.role);
-      setEmployee(employeeData);
-
-      return data.access_token;
+      return session.accessToken;
     } catch {
       logout();
       return null;
     }
   };
 
-  const value = useMemo(
-    () => ({
-      employee,
-      accessToken,
-      role,
-      login,
-      register,
-      logout,
-      refreshToken,
-      isAuthenticated: !!accessToken,
-    }),
-    [employee, accessToken, role]
-  );
+  const value: AuthContextType = {
+    employee,
+    accessToken,
+    role,
+    login,
+    register,
+    logout,
+    refreshToken,
+    isAuthenticated: !!accessToken,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-
-  return context;
 }

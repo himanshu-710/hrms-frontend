@@ -3,9 +3,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { Button, Input, Select, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 const primarySchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -16,6 +17,33 @@ const primarySchema = z.object({
 });
 
 type PrimaryFormValues = z.infer<typeof primarySchema>;
+
+function normalizeDateForInput(value?: string) {
+  if (!value) return "";
+  return value.includes("T") ? value.split("T")[0] : value;
+}
+
+function extractErrorMessage(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return "Something went wrong";
+  }
+
+  const responseData = error.response?.data;
+
+  if (typeof responseData === "string") {
+    return responseData;
+  }
+
+  if (typeof responseData?.detail === "string") {
+    return responseData.detail;
+  }
+
+  if (typeof responseData?.message === "string") {
+    return responseData.message;
+  }
+
+  return `Request failed with status ${error.response?.status ?? "unknown"}`;
+}
 
 export default function ProfilePrimaryForm() {
   const { employee } = useAuth();
@@ -50,7 +78,7 @@ export default function ProfilePrimaryForm() {
     reset({
       first_name: profile.employee.first_name ?? "",
       last_name: profile.employee.last_name ?? "",
-      dob: profile.employee.dob ?? "",
+      dob: normalizeDateForInput(profile.employee.dob),
       gender: profile.employee.gender ?? "",
       blood_group: profile.employee.blood_group ?? "",
     });
@@ -58,14 +86,26 @@ export default function ProfilePrimaryForm() {
 
   const mutation = useMutation({
     mutationFn: (values: PrimaryFormValues) =>
-      onboardingApi.updatePrimaryDetails(employeeId as number, values),
+      onboardingApi.updatePrimaryDetails(employeeId as number, {
+        employee_id: employeeId,
+        first_name: values.first_name.trim(),
+        last_name: values.last_name.trim(),
+        dob: normalizeDateForInput(values.dob),
+        gender: values.gender,
+        blood_group: values.blood_group,
+      }),
     onSuccess: () => {
       toast.success("Primary details updated");
       queryClient.invalidateQueries({ queryKey: ["onboarding-profile", employeeId] });
       queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
     },
-    onError: () => {
-      toast.error("Failed to update primary details");
+    onError: (error) => {
+      console.error("Primary details update failed", {
+        employeeId,
+        status: axios.isAxiosError(error) ? error.response?.status : undefined,
+        response: axios.isAxiosError(error) ? error.response?.data : undefined,
+      });
+      toast.error(extractErrorMessage(error));
     },
   });
 

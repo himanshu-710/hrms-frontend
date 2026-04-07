@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui";
 import Breadcrumbs from "@/components/layout/Breadcrumbs";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from "@/features/auth/context/useAuth";
 
 interface TopbarProps {
   onMenuClick?: () => void;
