@@ -11,7 +11,7 @@ const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
 });
 
-// Attach token to every request
+
 api.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) {
@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Auto refresh on 401
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {

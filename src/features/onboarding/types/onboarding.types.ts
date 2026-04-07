@@ -1,5 +1,6 @@
+
+
 export interface PrimaryDetailsPayload {
-  employee_id?: number;
   first_name: string;
   middle_name?: string;
   last_name: string;
@@ -11,15 +12,16 @@ export interface PrimaryDetailsPayload {
   nationality?: string;
 }
 
+
 export interface ContactPayload {
-  personal_email: string;
-  mobile_no: string;
-  work_no: string;
+  personal_email?: string;
+  mobile_no?: string;
+  work_no?: string;
   residence_no?: string;
 }
 
+
 export interface IdentityPayload {
-  employee_id?: number;
   doc_type: "AADHAAR" | "PAN" | "PASSPORT";
   doc_number: string;
   name_on_doc?: string;
@@ -27,6 +29,17 @@ export interface IdentityPayload {
   expiry_date?: string;
   extra_info?: Record<string, unknown>;
 }
+
+export interface ProfileIdentityItem {
+  id?: number;
+  employee_id?: number;
+  doc_type: "AADHAAR" | "PAN" | "PASSPORT";
+  doc_number: string;
+  name_on_doc?: string;
+  issue_date?: string;
+  expiry_date?: string;
+}
+
 
 export interface ProfileAddressItem {
   address_type?: "CURRENT" | "PERMANENT";
@@ -39,18 +52,22 @@ export interface ProfileAddressItem {
   ownership_type: string;
 }
 
-export interface AddressPayload {
-  employee_id?: number;
-  current: ProfileAddressItem;
-  permanent: ProfileAddressItem;
-  copy_from_current: boolean;
-}
-
 
 export interface CompletionResponse {
-  sections: Record<string, boolean>;
   percentage: number;
+  sections: {
+    profile?: boolean;
+    contact?: boolean;
+    education?: boolean;
+    experience?: boolean;
+    addresses?: boolean;
+    identity?: boolean;
+    documents?: boolean;
+    assets?: boolean;
+    relations?: boolean;
+  };
 }
+
 
 export interface DocumentItem {
   id: number;
@@ -70,6 +87,7 @@ export interface VerifyDocumentPayload {
   note?: string;
 }
 
+
 export interface EmployeeAssetItem {
   id: number;
   employee_id: number;
@@ -78,7 +96,7 @@ export interface EmployeeAssetItem {
   asset_name: string;
   serial_no?: string;
   assigned_on: string;
-  acknowledgement_status: string;
+  acknowledgement_status: "PENDING" | "ACKNOWLEDGED";
 }
 
 export interface AdminDashboardRow {
@@ -90,36 +108,33 @@ export interface AdminDashboardRow {
   completion_pct: number;
   incomplete_sections: string[];
 }
-export interface ProfileIdentityItem {
-  id?: number;
-  employee_id?: number;
-  doc_type: "AADHAAR" | "PAN" | "PASSPORT";
-  doc_number: string;
-  name_on_doc?: string;
-  issue_date?: string;
-  expiry_date?: string;
-}
+
 
 export interface ProfileResponse {
   employee: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    dob?: string;
-    gender?: string;
-    blood_group?: string;
-    personal_email?: string;
-    mobile_no?: string;
-    work_no?: string;
-  };
-  education: unknown[];
-  experience: unknown[];
+  id: number;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  display_name?: string;
+  dob?: string;
+  gender?: string;
+  marital_status?: string;
+  blood_group?: string;
+  nationality?: string;
+  personal_email?: string;
+  mobile_no?: string;
+  work_no?: string;
+};
+  education: EducationItem[];
+  experience: ExperienceItem[];
   addresses: ProfileAddressItem[];
   documents: DocumentItem[];
   assets: EmployeeAssetItem[];
   identity: ProfileIdentityItem[];
-  relations: Record<string, unknown>;
+  relations: RelationsPayload;
 }
+
 
 export interface ParentRelation {
   name: string;
@@ -146,6 +161,7 @@ export interface RelationsPayload {
   children: ChildRelation[];
 }
 
+
 export interface EducationItem {
   id: number;
   employee_id: number;
@@ -167,6 +183,8 @@ export interface EducationPayload {
   year_of_joining: number;
   year_of_completion: number;
 }
+
+
 export interface ExperienceItem {
   id: number;
   employee_id: number;

@@ -1,24 +1,26 @@
-import { useEffect, useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Input, Select, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
 import { useAuth } from "@/features/auth/context/useAuth";
 
-type IdentityFormValues = {
+type FormValues = {
   doc_type: "AADHAAR" | "PAN" | "PASSPORT" | "";
   doc_number: string;
+  name_on_doc: string;
+  issue_date: string;
+  expiry_date: string;
 };
 
-function maskAadhaar(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 4) return "XXXX-XXXX-XXXX";
-  return `XXXX-XXXX-${digits.slice(-4)}`;
+function toRFC3339(date?: string) {
+  if (!date) return null;
+  return new Date(date + "T00:00:00Z").toISOString();
 }
 
-function maskPan(value: string) {
-  if (!value || value.length < 4) return "****";
-  return `****${value.slice(-4)}`;
+function fromRFC3339(date?: string) {
+  if (!date) return "";
+  return date.split("T")[0];
 }
 
 export default function IdentityForm() {
@@ -26,93 +28,91 @@ export default function IdentityForm() {
   const employeeId = employee?.id;
   const queryClient = useQueryClient();
 
-  const { data: identityList } = useQuery({
-    queryKey: ["onboarding-identity", employeeId],
-    queryFn: () => onboardingApi.getIdentity(employeeId as number),
+  const { data: profile } = useQuery({
+    queryKey: ["onboarding-profile", employeeId],
+    queryFn: () => onboardingApi.getProfile(employeeId as number),
     enabled: !!employeeId,
   });
 
-  const { register, control, handleSubmit, reset } = useForm<IdentityFormValues>({
+  const { register, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
       doc_type: "",
       doc_number: "",
+      name_on_doc: "",
+      issue_date: "",
+      expiry_date: "",
     },
   });
 
   useEffect(() => {
-    const identity = identityList?.[0];
+    const identity = profile?.identity?.[0];
     if (!identity) return;
 
     reset({
       doc_type: identity.doc_type ?? "",
       doc_number: identity.doc_number ?? "",
+      name_on_doc: identity.name_on_doc ?? "",
+      issue_date: fromRFC3339(identity.issue_date),
+      expiry_date: fromRFC3339(identity.expiry_date),
     });
-  }, [identityList, reset]);
-
-  const docType = useWatch({ control, name: "doc_type" });
-  const docNumber = useWatch({ control, name: "doc_number" });
-
-  const maskedPreview = useMemo(() => {
-    if (docType === "AADHAAR") return maskAadhaar(docNumber || "");
-    if (docType === "PAN") return maskPan(docNumber || "");
-    return docNumber || "-";
-  }, [docType, docNumber]);
+  }, [profile, reset]);
 
   const mutation = useMutation({
-    mutationFn: (values: IdentityFormValues) =>
-      onboardingApi.saveIdentity(employeeId as number, {
-        doc_type: values.doc_type as "AADHAAR" | "PAN" | "PASSPORT",
+    mutationFn: (values: FormValues) =>
+      onboardingApi.updateIdentity(employeeId as number, {
+        doc_type: values.doc_type,
         doc_number: values.doc_number,
+        name_on_doc: values.name_on_doc,
+        issue_date: toRFC3339(values.issue_date),
+        expiry_date: toRFC3339(values.expiry_date),
       }),
+
     onSuccess: () => {
-      toast.success("Identity details updated");
-      queryClient.invalidateQueries({ queryKey: ["onboarding-identity", employeeId] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-profile", employeeId] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
+      toast.success("Identity saved");
+
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-profile", employeeId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-completion", employeeId],
+      });
     },
+
     onError: () => {
-      toast.error("Failed to update identity details");
+      toast.error("Failed to save identity");
     },
   });
 
-  const onSubmit = (values: IdentityFormValues) => {
-    if (!employeeId) {
-      toast.error("Employee id not found");
-      return;
-    }
-
-    mutation.mutate(values);
-  };
-
   return (
-    <div className="space-y-4">
-      <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-        <Select
-          label="Document Type"
-          options={[
-            { label: "Select document type", value: "" },
-            { label: "AADHAAR", value: "AADHAAR" },
-            { label: "PAN", value: "PAN" },
-            { label: "PASSPORT", value: "PASSPORT" },
-          ]}
-          {...register("doc_type")}
-        />
+    <form
+      className="grid gap-4 md:grid-cols-2"
+      onSubmit={handleSubmit((v) => mutation.mutate(v))}
+    >
+      <Select
+        label="Document Type"
+        options={[
+          { label: "Select", value: "" },
+          { label: "AADHAAR", value: "AADHAAR" },
+          { label: "PAN", value: "PAN" },
+          { label: "PASSPORT", value: "PASSPORT" },
+        ]}
+        {...register("doc_type")}
+      />
 
-        <Input label="Document Number" {...register("doc_number")} />
+      <Input label="Document Number" {...register("doc_number")} />
 
-        {(docType === "AADHAAR" || docType === "PAN") && (
-          <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-sm font-medium text-slate-700">Masked Preview</p>
-            <p className="mt-1 text-sm text-slate-600">{maskedPreview}</p>
-          </div>
-        )}
+      <Input label="Name on Document" {...register("name_on_doc")} />
 
-        <div className="md:col-span-2">
-          <Button type="submit" isLoading={mutation.isPending}>
-            Save Identity
-          </Button>
-        </div>
-      </form>
-    </div>
+      <Input type="date" label="Issue Date" {...register("issue_date")} />
+
+      <Input type="date" label="Expiry Date" {...register("expiry_date")} />
+
+      <div className="md:col-span-2">
+        <Button type="submit" isLoading={mutation.isPending}>
+          Save Identity
+        </Button>
+      </div>
+    </form>
   );
 }

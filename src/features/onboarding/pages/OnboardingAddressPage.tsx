@@ -5,6 +5,7 @@ export default function OnboardingAddressPage() {
   return (
     <div className="space-y-6">
       <AddressForm />
+
       <RelationsForm />
     </div>
   );

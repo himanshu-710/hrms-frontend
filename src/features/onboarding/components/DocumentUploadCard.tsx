@@ -10,12 +10,12 @@ type DocumentUploadCardProps = {
   ) => Promise<void>;
 };
 
-
 export default function DocumentUploadCard({
   selectedCategory,
   onUpload,
 }: DocumentUploadCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+
   const [file, setFile] = useState<File | null>(null);
   const [docCategory, setDocCategory] = useState("");
   const [error, setError] = useState("");
@@ -30,16 +30,18 @@ export default function DocumentUploadCard({
 
   const validateFile = (selectedFile: File) => {
     const maxSize = 5 * 1024 * 1024;
+
     if (selectedFile.size > maxSize) {
       setError("File size must be less than 5 MB");
       setFile(null);
       return;
     }
+
     setError("");
     setFile(selectedFile);
   };
 
-    const handleUpload = async () => {
+  const handleUpload = async () => {
     if (!file) {
       setError("Please select a file");
       return;
@@ -62,6 +64,10 @@ export default function DocumentUploadCard({
       setProgress(100);
       setFile(null);
       setDocCategory("");
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
     } catch {
       setError("Upload failed");
       setProgress(0);
@@ -70,12 +76,15 @@ export default function DocumentUploadCard({
     }
   };
 
-
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">Upload Document</h3>
-        <p className="text-sm text-slate-600">Max file size: 5 MB</p>
+        <h3 className="text-lg font-semibold text-slate-900">
+          Upload Document
+        </h3>
+        <p className="text-sm text-slate-600">
+          Max file size: 5 MB
+        </p>
       </div>
 
       <Select
@@ -105,7 +114,11 @@ export default function DocumentUploadCard({
           Drag and drop file here or choose manually
         </p>
 
-        <Button type="button" variant="secondary" onClick={() => inputRef.current?.click()}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => inputRef.current?.click()}
+        >
           Choose File
         </Button>
 
@@ -113,6 +126,7 @@ export default function DocumentUploadCard({
           ref={inputRef}
           type="file"
           className="hidden"
+          accept=".pdf,.jpg,.jpeg,.png"
           onChange={(e) => {
             const selectedFile = e.target.files?.[0];
             if (selectedFile) validateFile(selectedFile);
@@ -135,9 +149,17 @@ export default function DocumentUploadCard({
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-600">
+          {error}
+        </p>
+      )}
 
-      <Button type="button" onClick={handleUpload} isLoading={isUploading}>
+      <Button
+        type="button"
+        onClick={handleUpload}
+        isLoading={isUploading}
+      >
         Upload Document
       </Button>
     </div>

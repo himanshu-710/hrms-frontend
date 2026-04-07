@@ -1,19 +1,16 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Input, toast } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
 import { useAuth } from "@/features/auth/context/useAuth";
 
-const contactSchema = z.object({
-  personal_email: z.string().min(1, "Email is required").email("Invalid email"),
-  mobile_no: z.string().min(10, "Mobile number is required"),
-  work_no: z.string().min(1, "Work number is required"),
-});
-
-type ContactFormValues = z.infer<typeof contactSchema>;
+type FormValues = {
+  personal_email: string;
+  mobile_no: string;
+  work_no: string;
+  residence_no: string;
+};
 
 export default function ContactForm() {
   const { employee } = useAuth();
@@ -26,19 +23,7 @@ export default function ContactForm() {
     enabled: !!employeeId,
   });
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: {
-      personal_email: "",
-      mobile_no: "",
-      work_no: "",
-    },
-  });
+  const { register, handleSubmit, reset } = useForm<FormValues>();
 
   useEffect(() => {
     if (!profile?.employee) return;
@@ -47,56 +32,34 @@ export default function ContactForm() {
       personal_email: profile.employee.personal_email ?? "",
       mobile_no: profile.employee.mobile_no ?? "",
       work_no: profile.employee.work_no ?? "",
+      residence_no: profile.employee.residence_no ?? "",
     });
   }, [profile, reset]);
 
   const mutation = useMutation({
-    mutationFn: (values: ContactFormValues) =>
+    mutationFn: (values: FormValues) =>
       onboardingApi.updateContact(employeeId as number, values),
+
     onSuccess: () => {
-      toast.success("Contact details updated");
-      queryClient.invalidateQueries({ queryKey: ["onboarding-profile", employeeId] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
-    },
-    onError: () => {
-      toast.error("Failed to update contact details");
+      toast.success("Contact updated");
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-profile", employeeId],
+      });
     },
   });
 
-  const onSubmit = async (values: ContactFormValues) => {
-    if (!employeeId) {
-      toast.error("Employee id not found");
-      return;
-    }
-
-    mutation.mutate(values);
-  };
-
   return (
-    <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)}>
-      <Input
-        label="Personal Email"
-        type="email"
-        error={errors.personal_email?.message}
-        {...register("personal_email")}
-      />
-
-      <Input
-        label="Mobile Number"
-        error={errors.mobile_no?.message}
-        {...register("mobile_no")}
-      />
-
-      <Input
-        label="Work Number"
-        error={errors.work_no?.message}
-        {...register("work_no")}
-      />
+    <form
+      className="grid gap-4 md:grid-cols-2"
+      onSubmit={handleSubmit((v) => mutation.mutate(v))}
+    >
+      <Input label="Personal Email" {...register("personal_email")} />
+      <Input label="Mobile Number" {...register("mobile_no")} />
+      <Input label="Work Number" {...register("work_no")} />
+      <Input label="Residence Number" {...register("residence_no")} />
 
       <div className="md:col-span-2">
-        <Button type="submit" isLoading={mutation.isPending}>
-          Save Contact Details
-        </Button>
+        <Button type="submit">Save Contact</Button>
       </div>
     </form>
   );
