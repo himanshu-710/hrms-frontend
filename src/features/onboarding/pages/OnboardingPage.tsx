@@ -11,13 +11,15 @@ export default function OnboardingPage() {
         <h2 className="text-xl font-semibold text-slate-900">
           Welcome, {employee?.work_email ?? "Employee"}
         </h2>
+
         <p className="mt-2 text-sm text-slate-600">
-          Start with your primary and contact details, then use the onboarding steps on the left
-          to complete the remaining sections.
+          Start with your primary and contact details, then use the onboarding
+          steps on the left to complete the remaining sections.
         </p>
       </div>
 
       <ProfilePrimaryForm />
+
       <ContactForm />
     </div>
   );

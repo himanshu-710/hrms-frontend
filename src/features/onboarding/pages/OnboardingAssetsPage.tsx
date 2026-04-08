@@ -8,19 +8,31 @@ export default function OnboardingAssetsPage() {
   const employeeId = employee?.id;
   const queryClient = useQueryClient();
 
-  const { data = [], isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["onboarding-assets", employeeId],
     queryFn: () => onboardingApi.getAssets(employeeId as number),
     enabled: !!employeeId,
   });
 
+  
+  const assets = Array.isArray(data) ? data : [];
+
   const acknowledgeMutation = useMutation({
-    mutationFn: (assignmentId: number) => onboardingApi.acknowledgeAsset(assignmentId),
+    mutationFn: (assignmentId: number) =>
+      onboardingApi.acknowledgeAsset(assignmentId),
+
     onSuccess: () => {
       toast.success("Asset acknowledged");
-      queryClient.invalidateQueries({ queryKey: ["onboarding-assets", employeeId] });
-      queryClient.invalidateQueries({ queryKey: ["onboarding-completion", employeeId] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-assets", employeeId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["onboarding-completion", employeeId],
+      });
     },
+
     onError: () => {
       toast.error("Failed to acknowledge asset");
     },
@@ -40,7 +52,9 @@ export default function OnboardingAssetsPage() {
   if (isError) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <p className="text-sm text-red-600">Unable to load assigned assets right now.</p>
+        <p className="text-sm text-red-600">
+          Unable to load assigned assets right now.
+        </p>
       </div>
     );
   }
@@ -48,12 +62,19 @@ export default function OnboardingAssetsPage() {
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">Assigned Assets</h3>
-        <p className="text-sm text-slate-600">Review and acknowledge the assets assigned to you.</p>
+        <h3 className="text-lg font-semibold text-slate-900">
+          Assigned Assets
+        </h3>
+
+        <p className="text-sm text-slate-600">
+          Review and acknowledge the assets assigned to you.
+        </p>
       </div>
 
-      {data.length === 0 ? (
-        <p className="text-sm text-slate-500">No assets assigned yet.</p>
+      {assets.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          No assets assigned yet.
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -67,16 +88,36 @@ export default function OnboardingAssetsPage() {
                 <th className="px-3 py-2">Action</th>
               </tr>
             </thead>
+
             <tbody>
-              {data.map((asset) => {
-                const isAcknowledged = asset.acknowledgement_status === "ACKNOWLEDGED";
+              {assets.map((asset) => {
+                const isAcknowledged =
+                  asset.acknowledgement_status ===
+                  "ACKNOWLEDGED";
 
                 return (
-                  <tr key={asset.id} className="border-b border-slate-100">
-                    <td className="px-3 py-3">{asset.asset_code || asset.serial_no || `ASSET-${asset.id}`}</td>
-                    <td className="px-3 py-3">{asset.asset_type}</td>
-                    <td className="px-3 py-3">{asset.asset_name}</td>
-                    <td className="px-3 py-3">{asset.assigned_on}</td>
+                  <tr
+                    key={asset.id}
+                    className="border-b border-slate-100"
+                  >
+                    <td className="px-3 py-3">
+                      {asset.asset_code ||
+                        asset.serial_no ||
+                        `ASSET-${asset.id}`}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      {asset.asset_type}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      {asset.asset_name}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      {asset.assigned_on}
+                    </td>
+
                     <td className="px-3 py-3">
                       <span
                         className={`rounded-full px-2 py-1 text-xs ${
@@ -88,15 +129,24 @@ export default function OnboardingAssetsPage() {
                         {asset.acknowledgement_status}
                       </span>
                     </td>
+
                     <td className="px-3 py-3">
                       <Button
                         type="button"
                         variant="secondary"
                         disabled={isAcknowledged}
-                        isLoading={acknowledgeMutation.isPending}
-                        onClick={() => acknowledgeMutation.mutate(asset.id)}
+                        isLoading={
+                          acknowledgeMutation.isPending
+                        }
+                        onClick={() =>
+                          acknowledgeMutation.mutate(
+                            asset.id
+                          )
+                        }
                       >
-                        {isAcknowledged ? "Acknowledged OK" : "Acknowledge"}
+                        {isAcknowledged
+                          ? "Acknowledged"
+                          : "Acknowledge"}
                       </Button>
                     </td>
                   </tr>

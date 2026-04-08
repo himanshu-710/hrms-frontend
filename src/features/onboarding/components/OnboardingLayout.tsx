@@ -15,31 +15,50 @@ const stepToPath: Record<string, string> = {
   Completion: "/app/onboarding/completion",
 };
 
-function getStepStatus(step: string, sections: Record<string, boolean>) {
+type Sections = {
+  profile?: boolean;
+  contact?: boolean;
+  education?: boolean;
+  experience?: boolean;
+  addresses?: boolean;
+  relations?: boolean;
+  identity?: boolean;
+  documents?: boolean;
+  assets?: boolean;
+};
+
+function getStepStatus(step: string, sections: Sections) {
   switch (step) {
-    case "Primary Info": {
-      const profileDone = !!sections.profile;
-      const contactDone = !!sections.contact;
-      if (profileDone && contactDone) return "complete";
-      if (profileDone || contactDone) return "in-progress";
+    case "Primary Info":
+      if (sections.profile && sections.contact) return "complete";
+      if (sections.profile || sections.contact) return "in-progress";
       return "incomplete";
-    }
+
     case "Education":
       return sections.education ? "complete" : "incomplete";
+
     case "Experience":
       return sections.experience ? "complete" : "incomplete";
+
     case "Address":
       if (sections.addresses && sections.relations) return "complete";
       if (sections.addresses || sections.relations) return "in-progress";
       return "incomplete";
+
     case "Identity":
       return sections.identity ? "complete" : "incomplete";
+
     case "Documents":
       return sections.documents ? "complete" : "incomplete";
+
     case "Assets":
       return sections.assets ? "complete" : "incomplete";
+
     case "Completion":
-      return Object.values(sections).every(Boolean) ? "complete" : "in-progress";
+      return Object.values(sections).every(Boolean)
+        ? "complete"
+        : "in-progress";
+
     default:
       return "incomplete";
   }
@@ -47,14 +66,14 @@ function getStepStatus(step: string, sections: Record<string, boolean>) {
 
 function StepStatusIcon({ status }: { status: string }) {
   if (status === "complete") {
-    return <span className="text-sm text-green-600">OK</span>;
+    return <span className="text-green-600 text-sm">✓</span>;
   }
 
   if (status === "in-progress") {
-    return <span className="text-sm text-amber-600">•</span>;
+    return <span className="text-amber-600 text-sm">•</span>;
   }
 
-  return <span className="text-sm text-slate-400">○</span>;
+  return <span className="text-slate-400 text-sm">○</span>;
 }
 
 export default function OnboardingLayout() {
@@ -67,12 +86,14 @@ export default function OnboardingLayout() {
     enabled: !!employeeId,
   });
 
-  const sections = data?.sections ?? {};
+  const sections: Sections = data?.sections ?? {};
 
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
       <aside className="rounded-2xl bg-white p-4 shadow-sm lg:sticky lg:top-6 lg:self-start">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Onboarding</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">
+          Onboarding
+        </h2>
 
         <nav className="space-y-2">
           {onboardingSteps.map((step, index) => (
@@ -91,8 +112,12 @@ export default function OnboardingLayout() {
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold">
                 {index + 1}
               </span>
+
               <span className="flex-1">{step}</span>
-              <StepStatusIcon status={getStepStatus(step, sections)} />
+
+              <StepStatusIcon
+                status={getStepStatus(step, sections)}
+              />
             </NavLink>
           ))}
         </nav>
