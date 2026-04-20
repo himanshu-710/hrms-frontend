@@ -65,16 +65,14 @@ export const onboardingApi = {
     return res.data;
   },
   deleteDocument: (documentId: number) =>
-  api.delete(`/onboarding/documents/${documentId}`),
+    api.delete(`/onboarding/documents/${documentId}`),
   getPendingDocuments: async () => {
-  const res = await api.get("/admin/documents");
-  return res.data;
-},
+    const res = await api.get("/onboarding/admin/documents");
+    return res.data;
+  },
 
-verifyDocument: (id: number, data: any) =>
-  api.patch(`/admin/documents/${id}/verify`, data),
-
-
+  verifyDocument: (id: number, data: any) =>
+    api.patch(`/onboarding/documents/${id}/verify`, data),
 
   getAssets: async (employeeId: number) => {
     const res = await api.get(`/onboarding/profile/${employeeId}/assets`);
@@ -87,12 +85,12 @@ verifyDocument: (id: number, data: any) =>
   
 
   getAdminDashboard: async () => {
-    const res = await api.get(`/admin/onboarding-dashboard`);
+    const res = await api.get(`/onboarding/admin/dashboard`);
     return res.data;
   },
 
   sendReminder: (employeeId: number) =>
-    api.post(`/admin/onboarding/${employeeId}/reminder`),
+    api.post(`/onboarding/admin/${employeeId}/reminder`),
 
   
 

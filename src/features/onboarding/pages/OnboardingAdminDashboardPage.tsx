@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Pagination, Spinner, toast } from "@/components/ui";
+import { useQuery } from "@tanstack/react-query";
+import { Pagination, Spinner } from "@/components/ui";
 import { onboardingApi } from "@/features/onboarding/api/onboardingApi";
 import { useAuth } from "@/features/auth/context/useAuth";
 
@@ -25,17 +25,6 @@ export default function OnboardingAdminDashboardPage() {
     queryKey: ["onboarding-admin-dashboard", role],
     queryFn: () => onboardingApi.getAdminDashboard(),
     enabled: role === "HR",
-  });
-
-  const reminderMutation = useMutation({
-    mutationFn: ({ employeeId, name }: { employeeId: number; name: string }) =>
-      onboardingApi.sendReminder(employeeId).then(() => name),
-    onSuccess: (name) => {
-      toast.success(`Reminder sent to ${name}`);
-    },
-    onError: () => {
-      toast.error("Failed to send reminder");
-    },
   });
 
   const filteredRows = useMemo(
@@ -125,7 +114,6 @@ export default function OnboardingAdminDashboardPage() {
                 <th className="px-3 py-2">Days Since Joining</th>
                 <th className="px-3 py-2">Completion</th>
                 <th className="px-3 py-2">Incomplete Sections</th>
-                <th className="px-3 py-2">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -183,21 +171,7 @@ export default function OnboardingAdminDashboardPage() {
                     </div>
                   </td>
 
-                  <td className="px-3 py-3">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      isLoading={reminderMutation.isPending}
-                      onClick={() =>
-                        reminderMutation.mutate({
-                          employeeId: row.employee_id,
-                          name: row.name,
-                        })
-                      }
-                    >
-                      Send Reminder
-                    </Button>
-                  </td>
+                  
                 </tr>
               ))}
             </tbody>

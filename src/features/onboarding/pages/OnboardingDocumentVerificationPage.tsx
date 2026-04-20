@@ -16,11 +16,13 @@ export default function OnboardingDocumentVerificationPage() {
   const { role } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: documents = [], isLoading } = useQuery<PendingDocument[]>({
+  const { data, isLoading } = useQuery<PendingDocument[] | null>({
     queryKey: ["admin-documents"],
     queryFn: onboardingApi.getPendingDocuments,
     enabled: role === "HR",
   });
+
+  const documents = data ?? [];
 
   const verifyMutation = useMutation({
     mutationFn: ({

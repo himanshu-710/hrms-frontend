@@ -77,7 +77,7 @@ function StepStatusIcon({ status }: { status: string }) {
 }
 
 export default function OnboardingLayout() {
-  const { employee } = useAuth();
+  const { employee, role } = useAuth();
   const employeeId = employee?.id;
 
   const { data } = useQuery({
@@ -120,6 +120,42 @@ export default function OnboardingLayout() {
               />
             </NavLink>
           ))}
+
+          {role === "HR" && (
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <NavLink
+                to="/app/onboarding/admin"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                    isActive
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`
+                }
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold">
+                  A
+                </span>
+                <span className="flex-1">Admin Dashboard</span>
+              </NavLink>
+
+              <NavLink
+                to="/app/onboarding/admin/documents"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${
+                    isActive
+                      ? "bg-blue-50 font-medium text-blue-700"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`
+                }
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold">
+                  V
+                </span>
+                <span className="flex-1">Document Verification</span>
+              </NavLink>
+            </div>
+          )}
         </nav>
       </aside>
 
